@@ -20,6 +20,8 @@ int32_t to_motor_speed(float speed);
 
 void move_frame(ControllerPtr ctl);
 
+bool move_by_track(int32_t i);
+
 const int32_t max_servo_speed = 20;
 const int32_t servo_speed_bump = 19;
 

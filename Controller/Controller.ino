@@ -68,6 +68,7 @@ void setup() {
   reset();
   Buzzer_Setup();
   Ultrasonic_Setup();
+  Track_Setup();
   blocking_blink(1);
   // Buzzer_Alert(2, 1);
 }
@@ -78,8 +79,13 @@ bool dataUpdated = false;
 void loop() {
   i++; // Will wrap to 0 after 255
   delay(single_delay);
-  // This call fetches all the controllers' data.
-  // Call this function in your main loop.
+
+  // stuff without controller
+  bool is_on_track = false;
+  if (i % move_delays == 0) {
+    is_on_track = move_by_track(i);
+  }
+
   if (i % update_delays == 0) {
     dataUpdated = BP32.update();
   }
@@ -93,11 +99,11 @@ void loop() {
     Serial.println("Unsupported controller");
     return;
   }
-
   if (i % update_delays == 0) {
     processGamepad(myController);
     dumpGamepad(myController);
   }
+
   if (i % move_delays == 0) {
     move_frame(myController);
   }

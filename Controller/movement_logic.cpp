@@ -115,12 +115,90 @@ void move_frame(ControllerPtr ctl) {
     }
   }
 
+  if (forward == 0 && left == 0) {
+    return;
+  }
+
   int movement[4];
   movement[0] = forward + left;
   movement[1] = forward - left;
   movement[2] = forward - left;
   movement[3] = forward + left;
   Motor_Move(movement[0], movement[1], movement[2], movement[3]);
+}
+
+bool move_by_track(int32_t i) {
+  static int8_t direction = 0;
+  static bool last_fork_left = false;
+  static bool last_fork = false;
+  static bool prev_last_fork = false;
+  static int32_t lost = 0;
+  static int32_t after_fork = 0;
+  int32_t speed_fast = 1800;
+  int32_t speed_slow = 1100;
+  Track_Read();
+  if (last_fork && !(sensorValue[0] && !sensorValue[1] && sensorValue[2]) && !(sensorValue[0] && sensorValue[1] && sensorValue[2])) {
+    if (after_fork == 0) {
+      after_fork = i;
+    }
+    if (i - after_fork > 50) {
+      last_fork = false;
+    } else if (i - after_fork < 20) {
+      Motor_Move(speed_slow, speed_slow, speed_slow, speed_slow);
+    } else if (last_fork_left) {
+      Motor_Move(speed_fast, speed_fast, -speed_slow, -speed_fast);
+      direction = -1;
+    } else {
+      Motor_Move(0, -speed_slow, speed_fast, speed_fast);
+      direction = 1;
+    }
+    prev_last_fork = true;
+    return true;
+  }
+  if (prev_last_fork) {
+    prev_last_fork = false;
+    last_fork_left = !last_fork_left;
+    ledcWriteTone(BUZZER_CHN, 800);
+  } else {
+    ledcWriteTone(BUZZER_CHN, 0);
+  }
+  if (sensorValue[2] && !sensorValue[0]) {
+    Motor_Move(speed_fast, speed_fast, 0, -speed_slow);
+    direction = -1;
+  } else if (!sensorValue[2] && sensorValue[0]) {
+    Motor_Move(-speed_slow, -speed_fast, speed_fast, speed_fast);
+    direction = 1;
+  } else if (!sensorValue[2] && !sensorValue[0] && !sensorValue[1]) {
+    if (lost == 0) {
+      lost = i;
+    }
+    if (direction == -1) {
+      Motor_Move(speed_fast, speed_fast, -speed_slow, -speed_fast);
+    } else if (direction == 1) {
+      Motor_Move(-speed_slow, -speed_fast, speed_fast, speed_fast);
+    }
+    if (i - lost > 500){
+      Motor_Move(0, 0, 0, 0);
+    }
+    return false;
+  } else if (sensorValue[0] && sensorValue[1] && sensorValue[2]) {
+    Motor_Move(speed_slow, speed_slow, speed_slow, speed_slow);
+    direction = 0;
+  } else if (sensorValue[0] && !sensorValue[1] && sensorValue[2]) {
+    Motor_Move(0, 0, 0, 0);
+    last_fork = true;
+    after_fork = 0;
+  } else {
+    Motor_Move(speed_fast, speed_fast, speed_fast, speed_fast);
+    direction = 0;
+  }
+  if (!(sensorValue[0] && !sensorValue[1] && sensorValue[2])) {
+    last_fork = false;
+  }
+  if (!(!sensorValue[2] && !sensorValue[0] && !sensorValue[1])) {
+    lost = 0;
+  }
+  return true;
 }
 
 int32_t to_servo_speed(int32_t speed, bool hor, int32_t i) {
