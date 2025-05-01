@@ -17,7 +17,7 @@ bool move_by_track(int32_t i) {
   static float integral = 0.0f;
   static float last_error = 0.0f; // for derivative
 
-  const int32_t initial_speed_base = 1800;
+  const int32_t initial_speed_base = 1200;
   const float coef = static_cast<float>(initial_speed_base) / 1000;
   const float Kp = 1390.0f * coef;
   const float Ki = 5.0f * coef;
