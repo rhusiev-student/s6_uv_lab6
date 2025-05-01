@@ -17,23 +17,25 @@ bool move_by_track(int32_t i) {
   static float integral = 0.0f;
   static float last_error = 0.0f; // for derivative
 
-  const float Kp = 1550.0f;
-  const float Ki = 5.0f;
-  const float Kd = 1650.0f;
+  const int32_t initial_speed_base = 1800;
+  const float coef = static_cast<float>(initial_speed_base) / 1000;
+  const float Kp = 1390.0f * coef;
+  const float Ki = 5.0f * coef;
+  const float Kd = 1410.0f * coef;
   const float ERR_WHEN_LOST = 1.75f;
   const float ERR_WHEN_100 = 1.15f;
   const float ERR_WHEN_110 = 1.1f;
   const float MAX_INTEGRAL = 1000.0f;
   const int32_t FORCE_TURN_AFTER_FORK = 60;
-  constexpr int RING_SIZE = 4;
+  constexpr int RING_SIZE = 2;
 
   static float derivative_ring[RING_SIZE];
   static size_t der_idx = 0;
 
-  int32_t speed_base = 1100;
+  int32_t speed_base = initial_speed_base;
   // for fork
   int32_t speed_fast = 2000;
-  int32_t speed_slow = 700;
+  int32_t speed_slow = 500;
 
   Track_Read();
   bool track_l = sensorValue[0];
