@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 const uint8_t single_delay = 2;
-const uint8_t move_delays = 20 / single_delay;
+const uint8_t move_delays = 2 / single_delay;
 const uint8_t update_delays = 50 / single_delay;
 
 const uint8_t servo_delays_initial = 4 / single_delay;
