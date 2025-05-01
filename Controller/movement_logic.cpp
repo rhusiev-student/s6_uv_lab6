@@ -10,9 +10,9 @@ bool move_by_track(int32_t i) {
   static bool last_fork_left = false;
   static bool last_fork = false;
   static bool prev_last_fork = false;
+  static bool last_solid = true;
   static int32_t lost = 0;
   static int32_t after_fork = 0;
-  static int32_t time_at_101 = 0;
 
   static float integral = 0.0f;
   static float last_error = 0.0f; // for derivative
@@ -24,10 +24,8 @@ bool move_by_track(int32_t i) {
   const float ERR_WHEN_100 = 1.15f;
   const float ERR_WHEN_110 = 1.1f;
   const float MAX_INTEGRAL = 1000.0f;
-  const int32_t STATIONARY_THRESHOLD = 6; // Iterations of consecutive '101' to stop
-  const int32_t SLOW_AFTER_FORK = 2;
-  const int32_t FORCE_TURN_AFTER_FORK = 30;
-  constexpr int RING_SIZE = 20;
+  const int32_t FORCE_TURN_AFTER_FORK = 60;
+  constexpr int RING_SIZE = 10;
 
   static float derivative_ring[RING_SIZE];
   static size_t der_idx = 0;
@@ -35,7 +33,7 @@ bool move_by_track(int32_t i) {
   int32_t speed_base = 1100;
   // for fork
   int32_t speed_fast = 2000;
-  int32_t speed_slow = 800;
+  int32_t speed_slow = 700;
 
   Track_Read();
   bool track_l = sensorValue[0];
@@ -51,9 +49,6 @@ bool move_by_track(int32_t i) {
 
     if (time_since_fork_exit > FORCE_TURN_AFTER_FORK) {
         last_fork = false;
-    } else if (time_since_fork_exit < SLOW_AFTER_FORK) {
-        Motor_Move(speed_slow, speed_slow, speed_slow, speed_slow);
-        return true;
     } else {
         if (last_fork_left) {
              Motor_Move(speed_fast, speed_fast, -speed_slow, -speed_fast);
@@ -79,10 +74,8 @@ bool move_by_track(int32_t i) {
   bool line_lost = false;
 
   if (track_l && !track_c && track_r) {
-    if (time_at_101 == 0) {
-        time_at_101 = i;
-    }
-    if (i - time_at_101 > STATIONARY_THRESHOLD) {
+
+    if (last_solid) {
         Motor_Move(0, 0, 0, 0);
         integral = 0;
         last_error = 0;
@@ -95,11 +88,7 @@ bool move_by_track(int32_t i) {
         speed_base = speed_slow;
     }
   } else {
-    time_at_101 = 0;
-
-    if (!last_fork) {
-      last_fork = false;
-    }
+    last_fork = false;
 
     if (!track_l && track_c && !track_r) {
       error = 0.0f;
@@ -119,6 +108,7 @@ bool move_by_track(int32_t i) {
     } else if (track_l && track_c && track_r) {
       error = 0.0f;
       speed_base = speed_slow;
+      last_solid = true;
       // direction = 0;
     } else if (!track_l && !track_c && !track_r) {
       line_lost = true;
@@ -147,6 +137,9 @@ bool move_by_track(int32_t i) {
 
   if (!line_lost) {
     lost = 0;
+  }
+  if (!(track_l && track_c && track_r)) {
+    last_solid = false;
   }
 
   integral += error;
