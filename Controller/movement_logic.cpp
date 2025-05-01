@@ -17,15 +17,15 @@ bool move_by_track(int32_t i) {
   static float integral = 0.0f;
   static float last_error = 0.0f; // for derivative
 
-  const float Kp = 1600.0f;
+  const float Kp = 1550.0f;
   const float Ki = 5.0f;
-  const float Kd = 1500.0f;
+  const float Kd = 1650.0f;
   const float ERR_WHEN_LOST = 1.75f;
   const float ERR_WHEN_100 = 1.15f;
   const float ERR_WHEN_110 = 1.1f;
   const float MAX_INTEGRAL = 1000.0f;
   const int32_t FORCE_TURN_AFTER_FORK = 60;
-  constexpr int RING_SIZE = 10;
+  constexpr int RING_SIZE = 4;
 
   static float derivative_ring[RING_SIZE];
   static size_t der_idx = 0;
