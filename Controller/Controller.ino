@@ -32,7 +32,7 @@ void dumpGamepad(ControllerPtr ctl) {
 void reset() {
   Motor_Move(0, 0, 0, 0);
   Servo_1_Angle(90);
-  Servo_2_Angle(90);
+  Servo_2_Angle(0);
   off_front_left();
   off_front_right();
   off_back_left();
@@ -83,6 +83,11 @@ void loop() {
   // stuff without controller
   bool is_on_track = false;
   if (i % move_delays == 0) {
+    float distance = Get_Sonar(); // in cm
+    if (distance < 50) {
+      Motor_Move(0, 0, 0, 0);
+      return;
+    }
     is_on_track = move_by_track(i);
   }
 

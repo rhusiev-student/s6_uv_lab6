@@ -11,15 +11,16 @@ bool move_by_track(int32_t i) {
   static bool last_fork = false;
   static bool prev_last_fork = false;
   static bool last_solid = true;
+  static int32_t since_solid = 0;
   static int32_t lost = 0;
   static int32_t after_fork = 0;
 
   static float integral = 0.0f;
   static float last_error = 0.0f; // for derivative
 
-  const int32_t initial_speed_base = 1200;
+  const int32_t initial_speed_base = 1400;
   const float coef = static_cast<float>(initial_speed_base) / 1000;
-  const float Kp = 1390.0f * coef;
+  const float Kp = 1400.0f * coef;
   const float Ki = 5.0f * coef;
   const float Kd = 1410.0f * coef;
   const float ERR_WHEN_LOST = 1.75f;
@@ -78,11 +79,17 @@ bool move_by_track(int32_t i) {
   if (track_l && !track_c && track_r) {
 
     if (last_solid) {
+      if (since_solid < 50) {
         Motor_Move(0, 0, 0, 0);
         integral = 0;
         last_error = 0;
         lost = 0;
+        since_solid++;
         return true;
+      } else {
+        Motor_Move(speed_fast, speed_fast, speed_fast, speed_fast);
+        return true;
+      }
     } else {
         error = 0.0f;
         last_fork = true;
@@ -111,6 +118,7 @@ bool move_by_track(int32_t i) {
       error = 0.0f;
       speed_base = speed_slow;
       last_solid = true;
+      since_solid = 0;
       // direction = 0;
     } else if (!track_l && !track_c && !track_r) {
       line_lost = true;
